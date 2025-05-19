@@ -22,7 +22,7 @@ class authController {
                         role: admin.role
                     })
 
-                    res.cookie('acessToken', token, {
+                    res.cookie('accessToken', token, {
                         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                     })
                     responseReturn(res, 200, { token, message: 'Login Success' })
@@ -55,7 +55,7 @@ class authController {
                         role: seller.role
                     })
 
-                    res.cookie('acessToken', token, {
+                    res.cookie('accessToken', token, {
                         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                     })
                     responseReturn(res, 200, { token, message: 'Login Success' })
@@ -78,59 +78,60 @@ class authController {
         const { email, name, password } = req.body
 
         try {
-              
-           const getUser = await sellerModel.findOne({email});
 
-           if(getUser){
-              responseReturn(res, 404, {error : "Email Already Register"});
-           }else{
-            
-               const seller = await sellerModel.create({
-                   name,
-                   email,
-                   password : await bcrypt.hash(password, 10),
-                   method : 'menualy',
-                   shopInfo : {},
-               });
+            const getUser = await sellerModel.findOne({ email });
 
-               await sellerCustomerModel.create({
-                 myId : seller.id,
-               })
+            if (getUser) {
+                responseReturn(res, 404, { error: "Email Already Register" });
+            } else {
 
-               const token = await createToken({
-                    id : seller.id,
-                    role : seller.role,
-               });
+                const seller = await sellerModel.create({
+                    name,
+                    email,
+                    password: await bcrypt.hash(password, 10),
+                    method: 'menualy',
+                    shopInfo: {},
+                });
 
-               res.cookie('acessToken', token, {
-                expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-               })
+                await sellerCustomerModel.create({
+                    myId: seller.id,
+                })
 
-               responseReturn(res, 201, {token, message : "Register Success"});
-           }
+                const token = await createToken({
+                    id: seller.id,
+                    role: seller.role,
+                });
+
+                res.cookie('accessToken', token, {
+                    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                })
+
+                responseReturn(res, 201, { token, message: "Register Success" });
+            }
 
         } catch (error) {
-            responseReturn(res, 500, { error: 'Internal Server Error' })           
+            responseReturn(res, 500, { error: 'Internal Server Error' })
         }
     }
 
     // end method 
 
-    getUser = async(req, res) => {
-            
-        const {id, role} = req;
+    getUser = async (req, res) => {
+
+        const { id, role } = req;
 
         try {
-             
-            if(role === 'admin'){
+
+            if (role === 'admin') {
                 const user = await adminModel.findById(id);
-                responseReturn(res, 200, {userinfo : user})
-            }else{
-                console.log('Sellar Info')
+                responseReturn(res, 200, { userInfo: user })
+            } else {
+                const seller = await sellerModel.findById(id);
+                responseReturn(res, 200, { userInfo: seller })
             }
         } catch (error) {
-            
-             console.log(error.message)
+
+            responseReturn(res, 500, { error: 'Internal Server Error' })
 
         }
 

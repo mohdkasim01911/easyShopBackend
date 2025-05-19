@@ -10,4 +10,5 @@ router.post('/seller_register', authController.seller_register);
 
 router.post('/seller_login', authController.seller_login);
 
+
 module.exports = router;
