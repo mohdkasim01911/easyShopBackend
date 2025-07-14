@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const { createToken } = require('../utiles/tokenCreate');
 const sellerModel = require('../models/sellerModel');
 const sellerCustomerModel = require('../models/chat/sellerCustomerModel');
+const cloudinary = require('cloudinary').v2
+const formidabel = require('formidable');
 
 class authController {
     admin_login = async (req, res) => {
@@ -135,8 +137,70 @@ class authController {
 
         }
 
+    }
+   
+    profile_image_upload = async(req, res) => {
+        const {id} = req;
+        const form = formidabel({ multiples: true });
+
+        form.parse(req, async(err,_,files) => {
+            cloudinary.config({
+                cloud_name: process.env.cloud_name,
+                api_key: process.env.api_key,
+                api_secret: process.env.api_secret,
+                secure: true
+              })
+       
+            const {image} = files
+
+            try {
+                const result = await cloudinary.uploader.upload(image.filepath, { folder: 'profile' });
+                   
+                if (result) {
+                     await sellerModel.findByIdAndUpdate(id, {
+                        image : result.url,
+                     })
+                     const userInfo = await sellerModel.findById(id);
+                     responseReturn(res, 201, {message: "Profile Image Upload Successfully", userInfo  });
+                } else {
+                    responseReturn(res, 404, { error: "Image Upload Failed" });
+                }
+
+            } catch (error) {
+                responseReturn(res, 500, { error: error.message });
+            }
+
+
+        })
+        
+    }
+
+    profile_info_add = async(req, res) => {
+         
+        const {division, district, shopName, sub_district} = req.body;
+
+         const {id} = req;
+
+         try {
+            await sellerModel.findByIdAndUpdate(id, {
+                shopInfo: {
+                    shopName,
+                    division,
+                    district,
+                    sub_district
+                }
+            })
+          
+            const userInfo = await sellerModel.findById(id);
+            responseReturn(res, 201, {message: "Profile Info Add Successfully", userInfo  });
+         } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+         }
+
+        
 
     }
+
 
 
 }
