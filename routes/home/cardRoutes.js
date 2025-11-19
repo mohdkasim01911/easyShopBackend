@@ -3,4 +3,6 @@ const router = require('express').Router()
 
 router.post('/home/product/add-to-card',cardController.add_to_card) 
 
+router.get('/home/product/get-card-products/:userId',cardController.get_card_products) 
+
 module.exports = router 
